@@ -1,0 +1,58 @@
+services:
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    ### hot reload using watch
+    develop:
+      watch:
+        - action: sync
+          path: ./web
+          target: /app
+    ### hot reload using volumes
+    # volumes:
+    #   - ./web:/app
+    #   - /app/node_modules
+    # environment:
+      # - CHOKIDAR_USEPOLLING=true
+      # - WATCHPACK_POLLING=true
+    depends_on:
+      - api
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.dev
+    env_file:
+     - ./api/.env.dev
+    # environment:
+      # - NODE_ENV=production
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=bundb
+    ports:
+      - "3001:3001"
+    develop:
+      watch:
+        - action: sync
+          path: ./api
+          target: /app
+    # volumes:
+    #   - ./api:/app
+    #   - /app/node_modules
+    depends_on:
+      - db
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: bundb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
